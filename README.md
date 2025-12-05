@@ -1,3 +1,3 @@
 ## Pyryn projekti
 
-Tässä on kouluprojektini
+Tässä on kouluprojektini. Lisäsin  ensimmäisen skriptini.
