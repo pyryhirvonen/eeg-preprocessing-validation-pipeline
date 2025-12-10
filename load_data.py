@@ -11,7 +11,8 @@ from mne_bids import BIDSPath, read_raw_bids
 #Path to the BIDS dataset root on local computer
 def load_raw(subject, session, task, datatype, bids_root):
     """
-    Function takes parameters of data root and subject information.
+    Function takes parameters of data root and subject information. loads the
+    data,of assigned parameters, and returns it.
 
     :param subject: str, id number of subject
     :param session: str, eeg session number of the subject
