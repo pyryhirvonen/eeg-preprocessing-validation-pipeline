@@ -32,4 +32,5 @@ def load_raw(subject, session, task, datatype, bids_root):
     )
     # Load the EEG data to "raw"
     raw = read_raw_bids(bids_path)
+    raw.load_data()
     return raw
