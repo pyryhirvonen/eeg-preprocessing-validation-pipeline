@@ -1,0 +1,60 @@
+{
+  "bids_root": "/Users/pyryhirvonen/Desktop/Opiskelu/2025-2026/Kandidaatin tutkinto/Discover EEG - Pyry/TD-BRAIN-SAMPLE",
+  "subjects": ["87966293"],
+  "sessions": ["3"],
+  "tasks": ["restEC", "restEO"],
+  "datatype": "eeg",
+
+  "preprocessing": {
+    "notch_freq": 50,
+    "hp_cutoff": 0.5,
+    "lp_cutoff": 100,
+    "apply_reference": true,
+    "bad_channel_threshold": 0.2,
+    "bad_segment_threshold": 0.3,
+    "downsample_rate": 250
+  },
+
+  "ica": {
+    "method": "infomax",
+    "n_components": "auto",
+    "n_repetitions": 10
+  },
+
+  "epoching": {
+    "epoch_duration": 2.0,
+    "overlap": 0.5
+  },
+
+  "psd": {
+    "fmin": 1,
+    "fmax": 100,
+    "method": "multitaper"
+  },
+
+  "plot": {
+    "crop_tmin": 0,
+    "crop_tmax": 10
+  },
+
+  "visualization": {
+    "figsize_qc": [10, 6],
+    "figsize_grand": [12, 7],
+    "linewidth_qc": 1.0,
+    "linewidth_grand": 1.5,
+    "fontsize_title": 12,
+    "fontsize_label": 11,
+    "fontsize_grand_title": 14,
+    "fontsize_grand_label": 12,
+    "fontsize_legend": 11,
+    "color_qc": "green",
+    "color_ec": "blue",
+    "color_eo": "red",
+    "color_alpha_band": "gray",
+    "alpha_band_min": 8,
+    "alpha_band_max": 12,
+    "alpha_transparency": 0.15,
+    "grid_alpha": 0.3,
+    "dpi": 100
+  }
+}

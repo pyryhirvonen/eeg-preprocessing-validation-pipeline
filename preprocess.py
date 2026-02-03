@@ -61,5 +61,3 @@ def preprocess_raw(raw,l_freq,h_freq,notch_freqs,do_bandpass=True,do_notch=True,
     return raw_clean
 
 
-#raw.set_eeg_reference("average", projection=True)
-#print(raw.info["projs"])
