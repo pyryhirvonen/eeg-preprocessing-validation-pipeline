@@ -76,7 +76,7 @@ def plot_grand_average_psd(psd_data, output_dir, viz_params):
     ec_grand_avg = np.mean(ec_psds, axis=0) if ec_psds else None
     eo_grand_avg = np.mean(eo_psds, axis=0) if eo_psds else None
     
-    # Plot with log scale y-axis
+    # Plot grand-average PSD
     fig, ax = plt.subplots(figsize=tuple(viz_params['figsize_grand']))
     
     if ec_grand_avg is not None and ec_freqs is not None:

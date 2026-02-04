@@ -46,15 +46,13 @@ for subject in subjects:
             
             # Preprocess
             pp = params.get("preprocessing", {})
-            raw_clean = preprocess_raw(
-                raw,
-                l_freq=pp.get("hp_cutoff", 0.5),
-                h_freq=pp.get("lp_cutoff", 100),
-                notch_freqs=pp.get("notch_freq", 50),
-                do_bandpass=True,
-                do_notch=True,
-                do_ref=pp.get("apply_reference", True),
-            )
+            raw_clean, bads= preprocess_raw(raw,params)
+            # Diagnostic: Check available channels
+            print(f"\n  Preprocessing Summary:")
+            print(f"    Total channels: {len(raw_clean.ch_names)}")
+            print(f"    Bad channels marked: {len(raw_clean.info['bads'])} - {raw_clean.info['bads']}")
+            print(f"    Available EEG channels: {len(raw_clean.pick_types(eeg=True, exclude='bads').ch_names)}")
+            
             
             # Compute PSD
             psd_params = params.get("psd", {})

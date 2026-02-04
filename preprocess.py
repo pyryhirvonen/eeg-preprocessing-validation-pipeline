@@ -38,26 +38,69 @@ def average_reference(raw):
     return raw.set_eeg_reference(ref_channels="average")
 
 
-def preprocess_raw(raw,l_freq,h_freq,notch_freqs,do_bandpass=True,do_notch=True,do_ref=True):
+def preprocess_raw(raw,params):
     """
-    function takes parameters, and calls for each preprocessing function that
-    gets True-bool from main.py
-    :param raw: obj, EEG-data and metadata that we are processing
-    :param l_freq: int, lower frequency limit
-    :param h_freq: int, higher frequency limit
-    :param notch_freqs:  int, frequencies where notch filter is applied at.
-    :param do_bandpass: bool, If True, apply band-pass filter to the data.
-    :param do_notch: bool, If True, apply notch filter to the data.
-    :param do_ref: bool, If True, apply average reference to the data.
-    :return: obj, preprocessed data
+    Orchestrates all preprocessing steps.
+    Reads all parameters from params['preprocessing'].
+    
+    :param raw: mne.io.Raw, Raw EEG data
+    :param params: dict, Full params.json config
+    :return: mne.io.Raw, Preprocessed data
     """
-    raw_clean=raw.copy()
-    if do_bandpass:
-        raw_clean = bandpass_filter(raw_clean,l_freq,h_freq)
-    if do_notch:
-        raw_clean=notch_filter(raw_clean,notch_freqs)
-    if do_ref:
-        raw_clean=average_reference(raw_clean)
-    return raw_clean
+    pp = params.get("preprocessing", {})
+    
+    # Extract all parameters (defaults matching DISCOVER-EEG)
+    notch_freq = pp.get("notch_freq", 50)
+    hp_cutoff = pp.get("hp_cutoff", 0.5)
+    lp_cutoff = pp.get("lp_cutoff", 100)
+    do_bandpass = pp.get("do_bandpass", True)
+    do_notch = pp.get("do_notch", True)
+    do_ref = pp.get("do_ref", True)
+    do_bads_detection = pp.get("do_bads_detection", False)
+    
+    raw_clean = raw.copy()
+    bads = []
 
+    # Bad channel and segment detection
+    if do_bads_detection:
+        bads = detect_bad_channels(raw_clean, pp)
+    #bad_segments = detect_bad_segments(raw_clean, pp)
+    
+    # Apply preprocessing steps
+
+    
+    if do_notch:
+        raw_clean = notch_filter(raw_clean, notch_freq)
+    
+    if do_bandpass:
+        raw_clean = bandpass_filter(raw_clean, hp_cutoff, lp_cutoff)
+    
+    
+    if do_ref:
+        raw_clean = average_reference(raw_clean)
+    
+
+    return raw_clean, bads#, bad_segments
+
+
+def detect_bad_channels(raw_clean,params):
+    """
+    function detects bad channels based on the parameters given in params.json
+    :param raw: obj, EEG-data and metadata that we are processing
+    :param params: dict, parameters from params.json
+    :return: list, bad channel names
+    """
+    from mne.preprocessing import annotate_amplitude
+    annotations,bads=annotate_amplitude(raw_clean,peak=params['bad_channel_peak'],
+                                        flat=params['bad_channel_flat'],
+                                        min_duration=params['bad_channel_min_duration'],
+                                        bad_percent=params['bad_channel_bad_percent'],)
+    raw_clean.set_annotations(annotations)
+    if bads:
+        raw_clean.info['bads'].extend(bads)
+        print(f"  Bad channels detected: {len(bads)} - {bads}")
+    else:
+        print(f"  No bad channels detected")
+    
+    return bads
 
