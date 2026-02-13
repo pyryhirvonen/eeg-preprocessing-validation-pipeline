@@ -2,3 +2,9 @@ TD-BRAIN-SAMPLE
 data
 .DS_Store
 .idea
+.github
+poistettavaa.py
+derivatives
+__pycache__
+
+

@@ -1,7 +1,9 @@
 {
   "bids_root": "/Users/pyryhirvonen/Desktop/Opiskelu/2025-2026/Kandidaatin tutkinto/Discover EEG - Pyry/TD-BRAIN-SAMPLE",
-  "subjects": ["87966293"],
-  "sessions": ["3"],
+  "subjects": [
+    "19684666"
+    ],
+  "sessions": ["1"],
   "tasks": ["restEC", "restEO"],
   "datatype": "eeg",
 
@@ -12,13 +14,28 @@
     "do_bandpass": true,
     "do_notch": true,
     "do_ref": true,
-    "do_bads_detection": false,
-    "bad_channel_peak": 1000,
-    "bad_channel_flat": 0.01,
-    "bad_channel_min_duration": 0.005,
+    "do_bads_detection": true,
+    "do_run_ica": true,
+    "do_interpolate_bads": true,
+    "do_bad_segments_detection": true,
+    "do_epoching": true,
+    "bad_channel_peak": 200e-6,
+    "bad_channel_flat": 1e-6,
+    "bad_channel_min_duration": 5,
     "bad_channel_bad_percent": 20,
-    "bad_segment_peak": 100,
-    "bad_segment_flat": 1,
+    "bad_channel_snr": "self",
+    "discover_random_state": 42,
+    "discover_ransac_n_jobs": 1,
+    "discover_ransac_n_samples": 50,
+    "discover_ransac_fraction_bad": 0.2,
+    "discover_ransac_corr_thresh": 0.75,
+    "discover_ransac_sample_prop": 0.25,
+    "discover_ransac_corr_window_secs": 5,
+    "discover_ransac_channel_wise": false,
+    "bad_segment_peak": 100e-6,
+    "bad_segment_flat": 5e-6,
+    "bad_segment_min_duration": 5,
+    "bad_segment_bad_percent": 10,
     "bad_channel_threshold": 0.2,
     "bad_segment_threshold": 0.3,
     "downsample_rate": 250
@@ -26,13 +43,16 @@
 
   "ica": {
     "method": "infomax",
-    "n_components": "auto",
-    "n_repetitions": 10
+    "n_components": "none",
+    "random_state": 42,
+    "n_repetitions": 2
   },
 
   "epoching": {
     "epoch_duration": 2.0,
-    "overlap": 0.5
+    "overlap": 1.0,
+    "preload": true,
+    "reject_by_annotation": true
   },
 
   "psd": {
@@ -65,5 +85,27 @@
     "alpha_transparency": 0.15,
     "grid_alpha": 0.3,
     "dpi": 100
+  },
+
+  "qc": {
+    "figsize_channels": [14, 2],
+    "figsize_ic_classification": [8, 6],
+    "figsize_segments": [12, 3],
+    "figsize_epoch_summary": [8, 6],
+    "dpi": 100,
+    "fontsize_title": 12,
+    "fontsize_label": 11,
+    "fontsize_value": 10,
+    "color_good": "steelblue",
+    "color_bad": "red",
+    "color_kept_ic": "steelblue",
+    "color_muscle": "coral",
+    "color_eye": "gold",
+    "color_other": "lightgray",
+    "color_ec": "steelblue",
+    "color_eo": "lightgreen",
+    "edge_color": "black",
+    "edge_width": 1.5,
+    "grid_alpha": 0.3
   }
 }
