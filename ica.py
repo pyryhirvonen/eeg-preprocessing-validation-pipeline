@@ -35,6 +35,9 @@ def run_ica(raw_clean, params):
     bad_component_masks = []
     artifact_info_list = []
     
+    # Extract artifact threshold
+    artifact_threshold = ica_params.get("artifact_threshold", 0.8)
+    
     for run_idx in range(n_repetitions):
         print(f"\nRun {run_idx + 1}/{n_repetitions}")
         
@@ -46,7 +49,7 @@ def run_ica(raw_clean, params):
         )
         
         # Identify bad components with artifact type breakdown
-        artifact_info = identify_artifact_components(ica, raw_clean)
+        artifact_info = identify_artifact_components(ica, raw_clean, artifact_threshold)
         bad_components = artifact_info['bad_components']
         
         print(f"  → Bad components: {bad_components} ({len(bad_components)}/{ica.n_components})")
@@ -110,14 +113,15 @@ def fit_ica(raw_clean, params, random_state):
     return ica
 
 
-def identify_artifact_components(ica, raw_clean):
+def identify_artifact_components(ica, raw_clean, artifact_threshold=0.8):
     """
     Identifies artifact-related ICA components using DISCOVER-EEG strategy.
-    Checks: EOG, muscle, ECG artifacts.
-    Returns detailed breakdown of artifact types.
+    Checks: EOG, muscle, ECG artifacts with probability threshold.
+    Only components with probability > artifact_threshold are flagged.
     
     :param ica: mne.preprocessing.ICA, Fitted ICA object
     :param raw_clean: mne.io.Raw, Raw EEG data
+    :param artifact_threshold: float, Minimum probability (0-1) to flag component as artifact
     :return: dict, Contains 'bad_components' list and 'artifact_types' breakdown
     """
     bad_components = []
@@ -129,25 +133,31 @@ def identify_artifact_components(ica, raw_clean):
     
     # 1. EOG-related components (eye movements)
     try:
-        eog_indices, _ = ica.find_bads_eog(raw_clean)
-        bad_components.extend(eog_indices)
-        artifact_types['eog'] = eog_indices
+        eog_indices, eog_scores = ica.find_bads_eog(raw_clean)
+        # Filter by threshold (DISCOVER-EEG: default 0.8)
+        eog_filtered = [idx for idx, score in zip(eog_indices, eog_scores) if score > artifact_threshold]
+        bad_components.extend(eog_filtered)
+        artifact_types['eog'] = eog_filtered
     except ValueError:
         pass
     
     # 2. Muscle-related components
     try:
-        muscle_indices, _ = ica.find_bads_muscle(raw_clean)
-        bad_components.extend(muscle_indices)
-        artifact_types['muscle'] = muscle_indices
+        muscle_indices, muscle_scores = ica.find_bads_muscle(raw_clean)
+        # Filter by threshold (DISCOVER-EEG: default 0.8)
+        muscle_filtered = [idx for idx, score in zip(muscle_indices, muscle_scores) if score > artifact_threshold]
+        bad_components.extend(muscle_filtered)
+        artifact_types['muscle'] = muscle_filtered
     except ValueError:
         pass
     
     # 3. ECG-related components
     try:
-        ecg_indices, _ = ica.find_bads_ecg(raw_clean)
-        bad_components.extend(ecg_indices)
-        artifact_types['ecg'] = ecg_indices
+        ecg_indices, ecg_scores = ica.find_bads_ecg(raw_clean)
+        # Filter by threshold (DISCOVER-EEG: default 0.8)
+        ecg_filtered = [idx for idx, score in zip(ecg_indices, ecg_scores) if score > artifact_threshold]
+        bad_components.extend(ecg_filtered)
+        artifact_types['ecg'] = ecg_filtered
     except ValueError:
         pass
     

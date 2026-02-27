@@ -54,12 +54,12 @@ def preprocess_raw(raw,params):
     
     if do_ref:
         raw_clean = average_reference(raw_clean)
-     # Bad channel and segment detection is now skipped, as it needs debugging.
+
     if do_bads_detection:
         raw_clean = detect_bad_channels(raw_clean, pp)   
 
     if do_run_ica:
-        raw_clean, best_artifact_info = run_ica(raw_clean, pp)
+        raw_clean, best_artifact_info = run_ica(raw_clean, params)
 
     # Store bad channel info BEFORE interpolation (which clears info['bads'])
     bad_channels = list(raw_clean.info['bads']) if raw_clean.info['bads'] else []
@@ -75,7 +75,7 @@ def preprocess_raw(raw,params):
         raw_clean = detect_bad_segments(raw_clean, pp)
     
     if do_epoching:
-        epochs = epoch_data(raw_clean, pp)
+        epochs = epoch_data(raw_clean, params)
 
     return raw_clean, epochs, best_artifact_info
 
@@ -119,7 +119,7 @@ def detect_bad_channels(raw_clean, params):
     Detects bad channels using multiple criteria:
     1. Flatness (signal variability)
     2. Noise-to-Signal ratio (SNR)
-    3. RANSAC predictability (requires temporary epoching)
+    3. RANSAC predictability 
     
     :param raw_clean: mne.io.Raw, Preprocessed EEG data
     :param params: dict, Parameters from params.json
@@ -130,8 +130,8 @@ def detect_bad_channels(raw_clean, params):
     import numpy as np
 
     raw_clean.set_channel_types({
-    "VPVA": "misc",
-    "VNVB": "misc",
+    "VPVA": "eog",
+    "VNVB": "eog",
     "HPHL": "eog",
     "HNHR": "eog",
     "OrbOcc": "eog",
@@ -163,7 +163,7 @@ def detect_bad_channels(raw_clean, params):
         print(f"  No bad channels detected by flatness")
 
     # ===== CRITERION 2: NOISE-TO-SIGNAL RATIO =====
-    print(f"    Criterion 2: Noise-to-Signal ratio (z-score threshold)...")
+    print(f"    Criterion 2: Noise-to-Signal ratio")
     nd.find_bad_by_SNR()
     bads_snr = nd.bad_by_SNR
     if bads_snr:
@@ -173,7 +173,7 @@ def detect_bad_channels(raw_clean, params):
         print(f"  No bad channels detected by SNR")
 
     # ===== CRITERION 3: RANSAC =====
-    print(f"    Criterion 3: RANSAC predictability (≥80% good)...")
+    print(f"    Criterion 3: RANSAC predictability")
     
     try:
         

@@ -6,6 +6,20 @@ Student number: 152165990
 Mail: pyry.hirvonen@tuni.fi
 """
 
+"""
+Main orchestration file for EEG-data pipeline.
+
+This script:
+1. Loads raw EEG data from BIDS-compliant dataset
+2. Preprocesses data (notch filter, bandpass, average reference)
+3. Runs ICA artifact removal (DISCOVER-EEG multi-run strategy)
+4. Creates fixed-length overlapping epochs
+5. Computes Power Spectral Density (PSD)
+6. Generates QC reports and visualizations
+
+Configuration is centralized in params.json for reproducibility.
+"""
+
 import json
 import os
 import matplotlib.pyplot as plt
@@ -57,9 +71,7 @@ for subject in subjects:
             plt.close(fig)
             print(f"✓ Saved raw data plot: {raw_plot_path}")
             # plot PSD of raw data (linear y-axis)
-            raw_for_psd_raw = raw.copy()
-            raw_for_psd_raw.set_annotations(mne.Annotations(onset=[], duration=[], description=[]))
-            psd_raw = compute_psd_own(raw_for_psd_raw, params)
+            psd_raw = compute_psd_own(raw, params)
             plot_subject_psd_qc(psd_raw, subject, qc_dir, viz_params, suffix="_raw", task=task)
             print(f"✓ Saved raw data PSD figure for subject {subject}, task {task}")
 
@@ -102,6 +114,10 @@ print("Generating grand-average PSD figure...")
 print(f"{'='*60}")
 plot_grand_average_psd(psd_data, qc_dir, viz_params)
 print(f"✓ Grand-average PSD saved to {qc_dir}/")
+
+# Run permutation cluster test (EO vs EC validation)
+from permutation_test import run_permutation_cluster_test
+run_permutation_cluster_test(psd_data, params)
 
 # Generate QC summary CSV
 if qc_results:

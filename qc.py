@@ -140,9 +140,10 @@ def plot_qc_combined(raw_clean, epochs, ica_artifact_info, subject, task, output
     # Draw good segments (baseline)
     ax3.barh(0, duration_sec, height=0.5, color=color_good, edgecolor=edge_color, linewidth=edge_width)
     
-    # Draw bad segments
+    # Draw bad segments (annotate_amplitude creates descriptions like 'BAD_peak', 'BAD_flat', etc.)
     for ann in annotations:
-        if ann['description'] == 'bad':
+        # Match any annotation starting with 'BAD' (handles BAD_peak, BAD_flat, BAD_unknown, etc.)
+        if str(ann['description']).startswith('BAD'):
             onset = ann['onset']
             duration = ann['duration']
             ax3.barh(0, duration, left=onset, height=0.5, color=color_bad, edgecolor=edge_color, linewidth=edge_width)
