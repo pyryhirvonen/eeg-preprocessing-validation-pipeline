@@ -35,37 +35,24 @@
     "do_ref": true,
     "do_bads_detection": true,
     "do_run_ica": true,
-    "do_interpolate_bads": true,
-    "do_bad_segments_detection": true,
     "do_epoching": true,
     "bad_channel_peak": 200e-6,
     "bad_channel_flat": 1e-6,
     "bad_channel_min_duration": 5,
     "bad_channel_bad_percent": 20,
-    "bad_channel_snr": "self",
-    "discover_random_state": 42,
-    "discover_ransac_n_jobs": 1,
-    "discover_ransac_n_samples": 50,
-    "discover_ransac_fraction_bad": 0.2,
-    "discover_ransac_corr_thresh": 0.75,
-    "discover_ransac_sample_prop": 0.25,
-    "discover_ransac_corr_window_secs": 5,
-    "discover_ransac_channel_wise": false,
-    "bad_segment_peak": 200e-6,
-    "bad_segment_flat": 1e-6,
-    "bad_segment_min_duration": 5,
-    "bad_segment_bad_percent": 20,
-    "bad_channel_threshold": 0.2,
-    "bad_segment_threshold": 0.3,
-    "downsample_rate": 250
+    "discover_random_state": 42
   },
 
   "ica": {
     "method": "infomax",
     "n_components": null,
     "random_state": 42,
-    "n_repetitions": 5,
-    "artifact_threshold": 0.8
+    "n_repetitions": 4,
+    "artifact_threshold": 0.8,
+    "bad_segment_peak": 150e-6,
+    "bad_segment_flat": 1e-6,
+    "bad_segment_min_duration": 0.5,
+    "bad_segment_bad_percent": 100
   },
 
   "epoching": {
@@ -81,18 +68,9 @@
     "method": "multitaper"
   },
 
-  "plot": {
-    "crop_tmin": 0,
-    "crop_tmax": 10
-  },
-
   "visualization": {
-    "figsize_qc": [10, 6],
     "figsize_grand": [12, 7],
-    "linewidth_qc": 1.0,
     "linewidth_grand": 1.5,
-    "fontsize_title": 12,
-    "fontsize_label": 11,
     "fontsize_grand_title": 14,
     "fontsize_grand_label": 12,
     "fontsize_legend": 11,
@@ -102,36 +80,26 @@
     "color_alpha_band": "gray",
     "alpha_band_min": 8,
     "alpha_band_max": 12,
-    "alpha_transparency": 0.15,
-    "grid_alpha": 0.3,
-    "dpi": 100
+    "alpha_transparency": 0.15
   },
 
   "qc": {
     "figsize_channels": [14, 2],
     "figsize_ic_classification": [8, 6],
     "figsize_segments": [12, 3],
-    "figsize_epoch_summary": [8, 6],
-    "dpi": 100,
-    "fontsize_title": 12,
-    "fontsize_label": 11,
-    "fontsize_value": 10,
     "color_good": "steelblue",
     "color_bad": "red",
     "color_kept_ic": "steelblue",
     "color_muscle": "coral",
     "color_eye": "gold",
-    "color_other": "lightgray",
     "color_ec": "steelblue",
     "color_eo": "lightgreen",
     "edge_color": "black",
-    "edge_width": 1.5,
-    "grid_alpha": 0.3
+    "edge_width": 1.5
   },
 
   "permutation_test": {
     "n_permutations": 500,
-    "p_threshold": 0.05,
     "freq_min": 1,
     "freq_max": 100,
     "n_freqs": 500,

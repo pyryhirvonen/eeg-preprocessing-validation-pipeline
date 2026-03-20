@@ -92,7 +92,7 @@ def run_permutation_cluster_test(psd_data, params):
     # Format and save results
     results_df = format_cluster_results(
         T_obs, clusters, cluster_p_values, common_freqs, 
-        eo_power_array, ec_power_array
+        eo_power_array, ec_power_array, alpha=alpha
     )
     
     csv_path = os.path.join(qc_dir, "permutation_results.csv")
@@ -109,11 +109,11 @@ def run_permutation_cluster_test(psd_data, params):
     if not results_df.empty:
         significant_clusters = results_df[results_df["significant"] == True]
         if len(significant_clusters) > 0:
-            print(f"\n{len(significant_clusters)} significant cluster(s) found (p < 0.05):")
+            print(f"\n{len(significant_clusters)} significant cluster(s) found (p ≤ {alpha}):")
             for _, row in significant_clusters.iterrows():
                 print(f"  Cluster {row['cluster_id']}: {row['freq_min_hz']:.1f}-{row['freq_max_hz']:.1f} Hz, p={row['p_value']:.4f}, {row['direction']}")
         else:
-            print("\nNo significant clusters found (p < 0.05)")
+            print(f"\nNo significant clusters found (p ≤ {alpha})")
     else:
         print("\nNo clusters detected in permutation test.")
     
@@ -187,7 +187,7 @@ def run_cluster_permutation(eo_power, ec_power, common_freqs,
 
 
 def format_cluster_results(T_obs, clusters, cluster_p_values, common_freqs,
-                          eo_power, ec_power):
+                          eo_power, ec_power, alpha=0.05):
     """
     Format permutation test results into a DataFrame.
     
@@ -197,13 +197,16 @@ def format_cluster_results(T_obs, clusters, cluster_p_values, common_freqs,
     :param common_freqs: Frequency array
     :param eo_power: Eyes open power, shape (n_subjects, n_freqs)
     :param ec_power: Eyes closed power, shape (n_subjects, n_freqs)
+    :param alpha: Significance level (default 0.05, read from params)
     :return: pandas DataFrame with columns: cluster_id, freq_min_hz, freq_max_hz, 
              n_freq_points, p_value, direction, t_stat_max, significant
     """
     results = []
     
-    for cluster_id, cluster_indices in enumerate(clusters):
-        # Convert to numpy array if needed (MNE returns arrays but ensure type)
+    for cluster_id, cluster in enumerate(clusters):
+        # MNE returns clusters as tuples of arrays, e.g. (array([3, 4, 5]),)
+        # Unpack the tuple to get the actual index array
+        cluster_indices = cluster[0] if isinstance(cluster, tuple) else cluster
         cluster_indices = np.asarray(cluster_indices, dtype=int)
         
         if len(cluster_indices) == 0:
@@ -228,9 +231,9 @@ def format_cluster_results(T_obs, clusters, cluster_p_values, common_freqs,
         # Compute mean power difference in cluster
         mean_diff = (eo_power[:, cluster_indices].mean() - ec_power[:, cluster_indices].mean()).mean()
         
-        # Determine significance
-        p_threshold = 0.05
-        significant = p_value < p_threshold
+        # Determine significance (p <= alpha; permutation p-values are discrete,
+        # so the boundary value is included as significant)
+        significant = p_value <= alpha
         
         results.append({
             "cluster_id": cluster_id,
@@ -262,7 +265,7 @@ def plot_psd_with_clusters(psd_data, clusters, cluster_p_values,
     # Extract visualization parameters
     viz_params = params.get("visualization", {})
     perm_params = params.get("permutation_test", {})
-    p_threshold = perm_params.get("p_threshold", 0.05)
+    p_threshold = perm_params.get("alpha", 0.05)
     
     # Collect and interpolate EO/EC PSDs (similar to plot_grand_average_psd)
     eo_psds = []
@@ -306,11 +309,13 @@ def plot_psd_with_clusters(psd_data, clusters, cluster_p_values,
               color=viz_params.get("color_alpha_band", "gray"),
               label=f"Alpha band ({viz_params.get('alpha_band_min', 8)}-{viz_params.get('alpha_band_max', 12)} Hz)")
     
-    # Highlight significant clusters
-    for _, (cluster_indices, p_value) in enumerate(zip(clusters, cluster_p_values)):
-        if p_value < p_threshold:
-            freq_min = common_freqs[int(cluster_indices.min())]
-            freq_max = common_freqs[int(cluster_indices.max())]
+    # Highlight significant clusters (unpack MNE's tuple format)
+    for _, (cluster, p_value) in enumerate(zip(clusters, cluster_p_values)):
+        cluster_indices = cluster[0] if isinstance(cluster, tuple) else cluster
+        cluster_indices = np.asarray(cluster_indices, dtype=int)
+        if p_value <= p_threshold:
+            freq_min = common_freqs[cluster_indices.min()]
+            freq_max = common_freqs[cluster_indices.max()]
             ax.axvspan(freq_min, freq_max, alpha=0.2, color="red")
             # Add p-value label at cluster center (geometric mean for log scale)
             freq_center = (freq_min + freq_max) / 2

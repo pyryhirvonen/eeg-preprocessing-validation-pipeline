@@ -102,12 +102,11 @@ def plot_qc_combined(raw_clean, epochs, ica_artifact_info, subject, task, output
     n_components = ica_artifact_info.get('n_total', 0)
     n_kept = n_components - len(ica_artifact_info.get('bad_components', []))
     artifact_types = ica_artifact_info.get('artifact_types', {})
-    n_eog = len(artifact_types.get('eog', []))
+    n_eye = len(artifact_types.get('eye', []))
     n_muscle = len(artifact_types.get('muscle', []))
-    n_ecg = len(artifact_types.get('ecg', []))
     
     categories = ['kept ICs', 'muscle', 'eye']
-    values = [n_kept, n_muscle, n_eog]
+    values = [n_kept, n_muscle, n_eye]
     colors = [
         qc_params.get("color_kept_ic", "steelblue"),
         qc_params.get("color_muscle", "coral"),
