@@ -15,7 +15,7 @@ from scipy import stats
 import mne
 
 
-def run_permutation_cluster_test(psd_data, params):
+def run_permutation_cluster_test(psd_data, params, validation_root, qc_root):
     """
     Orchestrator function: Runs cluster-based permutation test on EO vs EC PSD data.
     
@@ -28,14 +28,16 @@ def run_permutation_cluster_test(psd_data, params):
     
     :param psd_data: dict, {subject: {task: {'psd': psd_obj, ...}}}
     :param params: dict, Full configuration from params.json
-    :return: None (saves results to derivatives/qc/)
+    :param validation_root: str, Path to validation directory
+    :param qc_root: str, Path to quality_control root directory
+    :return: None (saves results to validation/ directory)
     """
     print("\n" + "="*60)
     print("Cluster-Based Permutation Test (EO vs EC)")
     print("="*60)
     
-    qc_dir = "derivatives/qc"
-    os.makedirs(qc_dir, exist_ok=True)
+    # Create validation directory if not exists
+    os.makedirs(validation_root, exist_ok=True)
     
     # Extract permutation test parameters from config
     perm_params = params.get("permutation_test", {})
@@ -95,15 +97,15 @@ def run_permutation_cluster_test(psd_data, params):
         eo_power_array, ec_power_array, alpha=alpha
     )
     
-    csv_path = os.path.join(qc_dir, "permutation_results.csv")
+    csv_path = os.path.join(validation_root, "permutation_results.csv")
     results_df.to_csv(csv_path, index=False)
-    print(f"✓ Results saved to {qc_dir}/permutation_results.csv")
+    print(f"✓ Results saved to {validation_root}/permutation_results.csv")
     
     # Generate visualization
     plot_psd_with_clusters(
-        psd_data, clusters, cluster_p_values, common_freqs, params, qc_dir
+        psd_data, clusters, cluster_p_values, common_freqs, params, validation_root
     )
-    print(f"✓ Validation figure saved to {qc_dir}/permutation_test_clusters.png")
+    print(f"✓ Validation figure saved to {validation_root}/permutation_test_clusters.png")
     
     # Print summary
     if not results_df.empty:
@@ -310,6 +312,7 @@ def plot_psd_with_clusters(psd_data, clusters, cluster_p_values,
               label=f"Alpha band ({viz_params.get('alpha_band_min', 8)}-{viz_params.get('alpha_band_max', 12)} Hz)")
     
     # Highlight significant clusters (unpack MNE's tuple format)
+    sig_p_values = []
     for _, (cluster, p_value) in enumerate(zip(clusters, cluster_p_values)):
         cluster_indices = cluster[0] if isinstance(cluster, tuple) else cluster
         cluster_indices = np.asarray(cluster_indices, dtype=int)
@@ -317,19 +320,23 @@ def plot_psd_with_clusters(psd_data, clusters, cluster_p_values,
             freq_min = common_freqs[cluster_indices.min()]
             freq_max = common_freqs[cluster_indices.max()]
             ax.axvspan(freq_min, freq_max, alpha=0.2, color="red")
-            # Add p-value label at cluster center (geometric mean for log scale)
-            freq_center = (freq_min + freq_max) / 2
-            y_lim = ax.get_ylim()
-            y_text = np.sqrt(y_lim[0] * y_lim[1])  # Geometric mean for log scale
-            ax.text(freq_center, y_text, f"p={p_value:.3f}",
-                   ha="center", fontsize=9, color="red", fontweight="bold")
+            sig_p_values.append(f"p={p_value:.3f}")
     
     ax.set_xlabel("Frequency (Hz)", fontsize=viz_params.get("fontsize_grand_label", 12))
     ax.set_ylabel("Power (V²/Hz, log scale)", fontsize=viz_params.get("fontsize_grand_label", 12))
     ax.set_title("Permutation Test: EO vs EC (Significant Clusters Highlighted)",
                 fontsize=viz_params.get("fontsize_grand_title", 14), fontweight="bold")
     ax.set_xlim([common_freqs.min(), common_freqs.max()])
-    ax.legend(loc="upper right", fontsize=viz_params.get("fontsize_legend", 11))
+    
+    # Add legend with p-values
+    legend_labels = [
+        f"Eyes Closed (n={len(ec_psds)})",
+        f"Eyes Open (n={len(eo_psds)})",
+        f"Alpha band ({viz_params.get('alpha_band_min', 8)}-{viz_params.get('alpha_band_max', 12)} Hz)"
+    ]
+    if sig_p_values:
+        legend_labels.append(f"Significant clusters: {', '.join(sig_p_values)}")
+    ax.legend(legend_labels, loc="upper right", fontsize=viz_params.get("fontsize_legend", 11))
     ax.grid(True, alpha=viz_params.get("grid_alpha", 0.3))
     
     # Save figure

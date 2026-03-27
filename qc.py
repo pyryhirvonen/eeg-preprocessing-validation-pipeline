@@ -5,11 +5,12 @@ Generates QC summary CSV and visualization figures following DISCOVER-EEG guidel
 
 import os
 import csv
+import shutil
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
-def orchestrate_qc(raw_clean, epochs, ica_artifact_info, subject, session, task,output_dir, params):
+def orchestrate_qc(raw_clean, epochs, ica_artifact_info, subject, session, task, subject_qc_dir, params):
     """
     Unified QC orchestration: generates all QC plots and returns QC metrics record.
     
@@ -20,9 +21,9 @@ def orchestrate_qc(raw_clean, epochs, ica_artifact_info, subject, session, task,
     :param task: str, Task name (restEC or restEO)
     :param ica: mne.preprocessing.ICA, Fitted ICA object
     :param bad_components: list, Removed ICA components
-    :param output_dir: str, Output directory
+    :param subject_qc_dir: str, Subject-specific output directory in quality_control/sub-{ID}/
     :param params: dict, Full params.json config
-    :return: dict, QC metrics record for CSV
+    :return: dict, Contains 'qc_record' (dict with metrics for CSV) and 'fig_path' (str path to qc_combined figure)
     """
     
     # Get bad channels count and ICA info
@@ -31,14 +32,14 @@ def orchestrate_qc(raw_clean, epochs, ica_artifact_info, subject, session, task,
     print(f"✓ Detected {n_bad_channels} bad channels and removed {n_ics_removed} ICA components for subject {subject}, task {task}")
     
     # Plot combined QC figure (bad channels, IC classification, bad segments)
-    plot_qc_combined(raw_clean, epochs, ica_artifact_info, subject, task, output_dir, params)
+    fig_path = plot_qc_combined(raw_clean, epochs, ica_artifact_info, subject, task, subject_qc_dir, params)
     
     # Count epochs for CSV
     n_epochs = 0
     if epochs is not None:
         n_epochs = len(epochs)
     
-    # Return QC record for CSV
+    # Return QC record for CSV and figure path
     qc_record = {
         'subject_id': subject,
         'session': session,
@@ -50,21 +51,25 @@ def orchestrate_qc(raw_clean, epochs, ica_artifact_info, subject, session, task,
     
     print(f"✓ QC orchestration complete for subject {subject}, task {task}")
     
-    return qc_record
+    return {
+        'qc_record': qc_record,
+        'fig_path': fig_path
+    }
 
 
-def plot_qc_combined(raw_clean, epochs, ica_artifact_info, subject, task, output_dir, params):
+def plot_qc_combined(raw_clean, epochs, ica_artifact_info, subject, task, subject_qc_dir, params):
     """
     Combined QC plot: bad channels, IC classification, and bad segments in one figure.
+    Saves to subject directory and returns paths for copying.
     
     :param raw_clean: mne.io.Raw, Preprocessed raw data
     :param epochs: mne.Epochs or None, Epoched data
     :param ica_artifact_info: dict, ICA artifact information
     :param subject: str, Subject ID
     :param task: str, Task name
-    :param output_dir: str, Output directory
+    :param subject_qc_dir: str, Subject-specific output directory
     :param params: dict, Parameters from config
-    :return: None (saves figure)
+    :return: str, Path to saved qc_combined figure (for later copying)
     """
     qc_params = params.get("qc", {})
     
@@ -159,12 +164,14 @@ def plot_qc_combined(raw_clean, epochs, ica_artifact_info, subject, task, output
     
     fig.suptitle(f"QC Report - Subject {subject}, Task {task}", fontsize=14, fontweight='bold', y=0.995)
     
-    # Save
+    # Save to subject directory
     dpi = qc_params.get("dpi", 100)
-    fig_path = os.path.join(output_dir, f"sub-{subject}_task-{task}_qc_combined.png")
+    fig_path = os.path.join(subject_qc_dir, f"sub-{subject}_task-{task}_qc_combined.png")
     fig.savefig(fig_path, dpi=dpi, bbox_inches='tight')
     plt.close(fig)
     print(f"✓ Saved combined QC figure: {fig_path}")
+    
+    return fig_path
 
 
 

@@ -28,7 +28,7 @@
 
   "preprocessing": {
     "notch_freq": 50,
-    "hp_cutoff": 0.5,
+    "hp_cutoff": 1,
     "lp_cutoff": 100,
     "do_bandpass": true,
     "do_notch": true,
@@ -45,9 +45,10 @@
 
   "ica": {
     "method": "infomax",
+    "fit_params": {"extended": true},
     "n_components": null,
     "random_state": 42,
-    "n_repetitions": 4,
+    "n_repetitions": 10,
     "artifact_threshold": 0.8,
     "bad_segment_peak": 150e-6,
     "bad_segment_flat": 1e-6,
@@ -69,8 +70,12 @@
   },
 
   "visualization": {
+    "figsize_qc": [10, 6],
     "figsize_grand": [12, 7],
+    "linewidth_qc": 1.2,
     "linewidth_grand": 1.5,
+    "fontsize_title": 14,
+    "fontsize_label": 12,
     "fontsize_grand_title": 14,
     "fontsize_grand_label": 12,
     "fontsize_legend": 11,
@@ -80,7 +85,9 @@
     "color_alpha_band": "gray",
     "alpha_band_min": 8,
     "alpha_band_max": 12,
-    "alpha_transparency": 0.15
+    "alpha_transparency": 0.15,
+    "dpi": 300,
+    "grid_alpha": 0.3
   },
 
   "qc": {

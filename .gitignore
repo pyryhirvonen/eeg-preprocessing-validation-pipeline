@@ -4,7 +4,15 @@ data
 .idea
 .github
 poistettavaa.py
-derivatives
 __pycache__
+
+# Images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.bmp
+*.tiff
 
 

@@ -11,8 +11,9 @@ import mne
 
 from epoch import epoch_data
 from ica import run_ica
+from plot_psd import compute_psd_own, plot_subject_psd_qc
 
-def preprocess_raw(raw,params):
+def preprocess_raw(raw, params, subject="", task="", output_dir=""):
     """
     Orchestrates all preprocessing steps (DISCOVER-EEG pipeline).
     Steps 1-3: Filtering, re-referencing, bad channel detection
@@ -21,6 +22,9 @@ def preprocess_raw(raw,params):
     
     :param raw: mne.io.Raw, Raw EEG data
     :param params: dict, Full params.json config
+    :param subject: str, Subject ID for PSD plotting (optional, default: "")
+    :param task: str, Task name for PSD plotting (optional, default: "")
+    :param output_dir: str, Output directory for PSD figures (optional, default: "")
     :return: tuple (mne.io.Raw, mne.Epochs, dict artifact_info)
     """
     pp = params.get("preprocessing", {})
@@ -35,6 +39,18 @@ def preprocess_raw(raw,params):
     do_bads_detection = pp.get("do_bads_detection", True)
     do_run_ica = pp.get("do_run_ica", True)
     do_epoching = pp.get("do_epoching", True)
+    
+    # Create stage-specific subdirectories within output_dir
+    reref_dir = os.path.join(output_dir, "reref") if output_dir else ""
+    ica_dir = os.path.join(output_dir, "ica") if output_dir else ""
+    epoch_dir = os.path.join(output_dir, "epoch") if output_dir else ""
+    
+    if reref_dir:
+        os.makedirs(reref_dir, exist_ok=True)
+    if ica_dir:
+        os.makedirs(ica_dir, exist_ok=True)
+    if epoch_dir:
+        os.makedirs(epoch_dir, exist_ok=True)
     
     raw_clean = raw.copy()
 
@@ -53,16 +69,22 @@ def preprocess_raw(raw,params):
     # Step 3: Average reference (after bad channel detection)
     if do_ref:
         raw_clean = average_reference(raw_clean)
+    
+    # Plot PSD after rereferencing (stage: reference)
+    if subject and task and reref_dir:
+        psd_reference = compute_psd_own(raw_clean, params)
+        plot_subject_psd_qc(psd_reference, subject, reref_dir, task=task, stage="reference")
+        print(f"✓ Saved PSD after rereferencing: {subject}_task-{task}_reference_psd.png")
 
     # Steps 4-6: ICA + interpolation + bad segments (DISCOVER-EEG repetition strategy)
     best_artifact_info = {}
     if do_run_ica:
-        raw_clean, best_artifact_info = run_ica(raw_clean, params)
+        raw_clean, best_artifact_info = run_ica(raw_clean, params, subject=subject, task=task, output_dir=ica_dir)
 
-    # Step 7: Epoching
+    # Step 7: Epoching (includes PSD plot after epoching)
     epochs = None
     if do_epoching:
-        epochs = epoch_data(raw_clean, params)
+        epochs = epoch_data(raw_clean, params, subject=subject, task=task, output_dir=epoch_dir)
 
     return raw_clean, epochs, best_artifact_info
 

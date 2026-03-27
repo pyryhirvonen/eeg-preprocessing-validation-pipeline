@@ -16,9 +16,10 @@ The run whose bad-segment mask is closest to the average mask is selected.
 import numpy as np
 from mne.preprocessing import ICA, annotate_amplitude
 from mne_icalabel import label_components
+from plot_psd import compute_psd_own, plot_subject_psd_qc
 
 
-def run_ica(raw_clean, params):
+def run_ica(raw_clean, params, subject="", task="", output_dir=""):
     """
     Orchestrates ICA artifact removal with DISCOVER-EEG repetition strategy.
 
@@ -35,6 +36,9 @@ def run_ica(raw_clean, params):
 
     :param raw_clean: mne.io.Raw, Raw EEG data (after filtering + bad channel detection)
     :param params: dict, Full configuration from params.json
+    :param subject: str, Subject ID for PSD plotting (optional, default: "")
+    :param task: str, Task name for PSD plotting (optional, default: "")
+    :param output_dir: str, Output directory for PSD figures (optional, default: "")
     :return: tuple, (mne.io.Raw cleaned data, dict artifact_info)
     """
     ica_params = params.get("ica", {})
@@ -120,13 +124,23 @@ def run_ica(raw_clean, params):
     print(f"  • Eye: {len(best_artifact_info['artifact_types']['eye'])}")
     print(f"  • Muscle: {len(best_artifact_info['artifact_types']['muscle'])}")
     print(f"Bad segments: {bad_pct:.1f}% of recording\n")
+    
+    # Plot PSD after ICA (stage: ica) - before return
+    if subject and task and output_dir:
+        # Remove annotations to allow multitaper PSD calculation
+        raw_for_psd = best['raw_cleaned'].copy()
+        if len(raw_for_psd.annotations) > 0:
+            raw_for_psd.annotations.delete(np.arange(len(raw_for_psd.annotations)))
+        psd_ica = compute_psd_own(raw_for_psd, params)
+        plot_subject_psd_qc(psd_ica, subject, output_dir, task=task, stage="ica")
+        print(f"✓ Saved PSD after ICA: {subject}_task-{task}_ica_psd.png")
 
     return best['raw_cleaned'], best_artifact_info
 
 
 def fit_ica(raw, params, random_state):
     """
-    Fits ICA on raw data. Uses infomax (= MATLAB runica) by default.
+    Fits ICA on raw data. Uses infomax (= MATLAB runica) by default with extended infomax.
     ICA is fitted only on clean channels (bad channels already removed).
 
     :param raw: mne.io.Raw, Raw EEG data
@@ -137,11 +151,13 @@ def fit_ica(raw, params, random_state):
     ica_params = params.get("ica", {})
     n_components = ica_params.get("n_components", None)
     method = ica_params.get("method", "infomax")
+    fit_params = ica_params.get("fit_params", {"extended": True})
 
     ica = ICA(
         n_components=n_components,
         random_state=random_state,
-        method=method
+        method=method,
+        fit_params=fit_params
     )
     ica.fit(raw)
     print(f"  ICA fitted: {len(ica.ch_names)} components")
