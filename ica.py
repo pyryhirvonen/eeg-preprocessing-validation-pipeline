@@ -212,22 +212,30 @@ def detect_bad_segments(raw, ica_params):
     """
     Detects bad time segments using amplitude-based criteria (DISCOVER-EEG step 6).
     Annotates the raw object with BAD_ annotations.
+    Flags channels as bad if >bad_percent of their data is marked as bad segment.
 
     :param raw: mne.io.Raw, EEG data after ICA + interpolation
     :param ica_params: dict, ICA parameters (includes bad_segment settings)
-    :return: mne.io.Raw with bad-segment annotations
+    :return: mne.io.Raw with bad-segment annotations and updated bads list
     """
-    annotations, _ = annotate_amplitude(
+    annotations, bad_channels = annotate_amplitude(
         raw,
         peak=ica_params.get('bad_segment_peak', 200e-6),
         flat=ica_params.get('bad_segment_flat', 1e-6),
-        min_duration=ica_params.get('bad_segment_min_duration', 5),
+        min_duration=ica_params.get('bad_segment_min_duration', 0.125),
         bad_percent=ica_params.get('bad_segment_bad_percent', 20),
     )
 
     n_bad = len(annotations)
     total_bad_sec = sum(ann['duration'] for ann in annotations)
     print(f"  Bad segments: {n_bad} annotations, {total_bad_sec:.1f}s total")
+    
+    # Add channels flagged by bad_percent threshold to raw.info['bads']
+    if bad_channels:
+        current_bads = set(raw.info.get('bads', []))
+        current_bads.update(bad_channels)
+        raw.info['bads'] = list(current_bads)
+        print(f"  Bad channels (bad_percent > threshold): {len(bad_channels)} - {bad_channels}")
 
     raw.set_annotations(raw.annotations + annotations)
     return raw

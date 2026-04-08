@@ -36,7 +36,7 @@ def compute_psd_own(data,params):
     return psd_avg
 
 
-def plot_subject_psd_qc(psd, subject, output_dir, suffix="", task="", stage=""):
+def plot_subject_psd_qc(psd, subject, output_dir, suffix="", task="", stage="", ylim=None):
     """
     Function plots per-subject PSD (QC figure) with linear y-axis.
     
@@ -46,6 +46,7 @@ def plot_subject_psd_qc(psd, subject, output_dir, suffix="", task="", stage=""):
     :param suffix: str, Optional suffix for filename (default: "", used for backward compatibility)
     :param task: str, Task name for filename (default: "")
     :param stage: str, Processing stage for filename (default: "", options: "reference", "ica", "epochs")
+    :param ylim: tuple or list, Y-axis limits [ymin, ymax] (default: None, auto-scale)
     """
     fig, ax = plt.subplots(figsize=tuple(viz_params.get('figsize_qc', [10, 6])))
     
@@ -70,7 +71,7 @@ def plot_subject_psd_qc(psd, subject, output_dir, suffix="", task="", stage=""):
     
     # Highlight alpha band
     alpha_min = viz_params.get('alpha_band_min', 8)
-    alpha_max = viz_params.get('alpha_band_max', 12)
+    alpha_max = viz_params.get('alpha_band_max', 13)
     ax.axvspan(alpha_min, alpha_max, 
                alpha=viz_params.get('alpha_transparency', 0.15), color=viz_params.get('color_alpha_band', 'gray'), 
                label=f"Alpha band ({alpha_min}-{alpha_max} Hz)")
@@ -85,6 +86,8 @@ def plot_subject_psd_qc(psd, subject, output_dir, suffix="", task="", stage=""):
     ax.set_xlabel("Frequency (Hz)", fontsize=viz_params.get('fontsize_label', 12))
     ax.set_ylabel("Power (V²/Hz)", fontsize=viz_params.get('fontsize_label', 12))
     ax.set_xlim([1, 100])
+    if ylim is not None:
+        ax.set_ylim(ylim)
     ax.grid(True, alpha=viz_params.get('grid_alpha', 0.3))
     ax.legend()
     
@@ -163,7 +166,7 @@ def plot_grand_average_psd(psd_data, qc_overall_dir, validation_root):
     
     # Highlight alpha band
     alpha_min = viz_params.get('alpha_band_min', 8)
-    alpha_max = viz_params.get('alpha_band_max', 12)
+    alpha_max = viz_params.get('alpha_band_max', 13)
     ax.axvspan(alpha_min, alpha_max, 
                alpha=viz_params.get('alpha_transparency', 0.15), color=viz_params.get('color_alpha_band', 'gray'), 
                label=f"Alpha band ({alpha_min}-{alpha_max} Hz)")

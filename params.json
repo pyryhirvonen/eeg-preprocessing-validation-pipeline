@@ -21,11 +21,15 @@
     "88068393",
     "88072845",
     "88075865"
-    ],
-  "sessions": ["1"],
-  "tasks": ["restEC", "restEO"],
+  ],
+  "sessions": [
+    "1"
+  ],
+  "tasks": [
+    "restEC",
+    "restEO"
+  ],
   "datatype": "eeg",
-
   "preprocessing": {
     "notch_freq": 50,
     "hp_cutoff": 1,
@@ -36,42 +40,46 @@
     "do_bads_detection": true,
     "do_run_ica": true,
     "do_epoching": true,
-    "bad_channel_peak": 200e-6,
-    "bad_channel_flat": 1e-6,
+    "bad_channel_peak": 0.0002,
+    "bad_channel_flat": 1e-06,
     "bad_channel_min_duration": 5,
     "bad_channel_bad_percent": 20,
     "discover_random_state": 42
   },
-
   "ica": {
     "method": "infomax",
-    "fit_params": {"extended": true},
+    "fit_params": {
+      "extended": true
+    },
     "n_components": null,
     "random_state": 42,
     "n_repetitions": 10,
     "artifact_threshold": 0.8,
-    "bad_segment_peak": 150e-6,
-    "bad_segment_flat": 1e-6,
+    "bad_segment_peak": 200e-06,
+    "bad_segment_flat": 1e-06,
     "bad_segment_min_duration": 0.5,
-    "bad_segment_bad_percent": 100
+    "bad_segment_bad_percent": 20
   },
-
   "epoching": {
     "epoch_duration": 2.0,
     "overlap": 1.0,
     "preload": true,
     "reject_by_annotation": true
   },
-
   "psd": {
     "fmin": 1,
     "fmax": 100,
     "method": "multitaper"
   },
-
   "visualization": {
-    "figsize_qc": [10, 6],
-    "figsize_grand": [12, 7],
+    "figsize_qc": [
+      10,
+      6
+    ],
+    "figsize_grand": [
+      12,
+      7
+    ],
     "linewidth_qc": 1.2,
     "linewidth_grand": 1.5,
     "fontsize_title": 14,
@@ -84,16 +92,24 @@
     "color_eo": "green",
     "color_alpha_band": "gray",
     "alpha_band_min": 8,
-    "alpha_band_max": 12,
+    "alpha_band_max": 13,
     "alpha_transparency": 0.15,
     "dpi": 300,
     "grid_alpha": 0.3
   },
-
   "qc": {
-    "figsize_channels": [14, 2],
-    "figsize_ic_classification": [8, 6],
-    "figsize_segments": [12, 3],
+    "figsize_channels": [
+      14,
+      2
+    ],
+    "figsize_ic_classification": [
+      8,
+      6
+    ],
+    "figsize_segments": [
+      12,
+      3
+    ],
     "color_good": "steelblue",
     "color_bad": "red",
     "color_kept_ic": "steelblue",
@@ -104,7 +120,6 @@
     "edge_color": "black",
     "edge_width": 1.5
   },
-
   "permutation_test": {
     "n_permutations": 500,
     "freq_min": 1,

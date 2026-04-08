@@ -306,10 +306,10 @@ def plot_psd_with_clusters(psd_data, clusters, cluster_p_values,
                    color=viz_params.get("color_eo", "lightgreen"))
     
     # Highlight alpha band
-    ax.axvspan(viz_params.get("alpha_band_min", 8), viz_params.get("alpha_band_max", 12),
+    ax.axvspan(viz_params.get("alpha_band_min", 8), viz_params.get("alpha_band_max", 13),
               alpha=viz_params.get("alpha_transparency", 0.15),
               color=viz_params.get("color_alpha_band", "gray"),
-              label=f"Alpha band ({viz_params.get('alpha_band_min', 8)}-{viz_params.get('alpha_band_max', 12)} Hz)")
+              label=f"Alpha band ({viz_params.get('alpha_band_min', 8)}-{viz_params.get('alpha_band_max', 13)} Hz)")
     
     # Highlight significant clusters (unpack MNE's tuple format)
     sig_p_values = []
@@ -332,7 +332,7 @@ def plot_psd_with_clusters(psd_data, clusters, cluster_p_values,
     legend_labels = [
         f"Eyes Closed (n={len(ec_psds)})",
         f"Eyes Open (n={len(eo_psds)})",
-        f"Alpha band ({viz_params.get('alpha_band_min', 8)}-{viz_params.get('alpha_band_max', 12)} Hz)"
+        f"Alpha band ({viz_params.get('alpha_band_min', 8)}-{viz_params.get('alpha_band_max', 13)} Hz)"
     ]
     if sig_p_values:
         legend_labels.append(f"Significant clusters: {', '.join(sig_p_values)}")
