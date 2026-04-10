@@ -1,11 +1,14 @@
 """
-Quality Control (QC) reporting module.
+Data preprocessing quality control module of EEG - Data pipeline:
+Bachelor's thesis
+Author: Pyry Hirvonen
+Student number: 152165990
+Mail: pyry.hirvonen@tuni.fi
 Generates QC summary CSV and visualization figures following DISCOVER-EEG guidelines.
 """
 
 import os
 import csv
-import shutil
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -19,8 +22,7 @@ def orchestrate_qc(raw_clean, epochs, ica_artifact_info, subject, session, task,
     :param subject: str, Subject ID
     :param session: str, Session ID
     :param task: str, Task name (restEC or restEO)
-    :param ica: mne.preprocessing.ICA, Fitted ICA object
-    :param bad_components: list, Removed ICA components
+    :param ica_artifact_info: dict, ICA artifact information and removed components
     :param subject_qc_dir: str, Subject-specific output directory in quality_control/sub-{ID}/
     :param params: dict, Full params.json config
     :return: dict, Contains 'qc_record' (dict with metrics for CSV) and 'fig_path' (str path to qc_combined figure)

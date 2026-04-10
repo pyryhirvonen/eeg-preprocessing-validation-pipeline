@@ -17,7 +17,7 @@ This pipeline processes resting-state EEG data from the [TD-BRAIN](https://www.n
 **Preprocessing:**
 1. **Load** raw BIDS-compliant EEG data via `mne-bids`
 2. **Line-noise removal** — notch filter (50 Hz) for power-line interference
-3. **Band-pass filter** — high-pass (10 Hz) and low-pass (100 Hz)
+3. **Band-pass filter** — high-pass (1 Hz) and low-pass (100 Hz)
 4. **Bad channel detection** — automated detection using RANSAC (`pyprep`)
 5. **Re-reference** — average reference across all channels
 6. **ICA** — extended Infomax ICA decomposition with artifact labeling via `mne-icalabel`
@@ -85,7 +85,7 @@ All pipeline parameters are centralized in [`params.json`](params.json). Key con
 | **Input** | `bids_root`, `subjects`, `sessions`, `tasks`, `datatype` |
 | **Preprocessing** | `notch_freq` (50 Hz), `hp_cutoff` (1 Hz), `lp_cutoff` (100 Hz), bad-channel thresholds (`bad_channel_peak`, `bad_channel_flat`, etc.) |
 | **ICA** | `method` (infomax), `fit_params` (extended=true), `n_components`, `n_repetitions`, `artifact_threshold`, bad-segment thresholds |
-| **Epoching** | `epoch_duration` (2.0 s), `overlap` (50%), `preload`, `reject_by_annotation` |
+| **Epoching** | `epoch_duration` (2.0 s), `overlap` (1.0 s), `preload`, `reject_by_annotation` |
 | **PSD** | `fmin` (1 Hz), `fmax` (100 Hz), `method` (multitaper) |
 | **Visualization** | Figure sizes, colors (EC=blue, EO=green), alpha-band highlighting (8–12 Hz), DPI settings, etc. |
 | **QC** | Channel/IC/segment visualization parameters |
@@ -95,6 +95,14 @@ Edit `params.json` to customize preprocessing, ICA, epoching, and PSD parameters
 ---
 
 ## Usage
+
+Before running, make sure [`params.json`](params.json) points to your local dataset path:
+
+```json
+"bids_root": "/absolute/path/to/TD-BRAIN-SAMPLE"
+```
+
+Then run:
 
 ```bash
 # Activate environment

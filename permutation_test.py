@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.sparse import csr_matrix
-from scipy import stats
 import mne
 
 
@@ -263,6 +262,7 @@ def plot_psd_with_clusters(psd_data, clusters, cluster_p_values,
     :param common_freqs: Common frequency array
     :param params: Full configuration
     :param output_dir: Output directory
+    :return: None
     """
     # Extract visualization parameters
     viz_params = params.get("visualization", {})

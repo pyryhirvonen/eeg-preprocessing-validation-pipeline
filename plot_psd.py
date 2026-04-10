@@ -1,7 +1,11 @@
 """
-PSD visualization and analysis module.
-Per-subject QC plot and grand-average EO vs EC PSD comparison.
+PSD visualization and analysis module of EEG - Data pipeline
+Bachelor's thesis
+Author: Pyry Hirvonen
+Student number: 152165990
+Mail: pyry.hirvonen@tuni.fi
 """
+
 
 import json
 import mne
@@ -47,6 +51,7 @@ def plot_subject_psd_qc(psd, subject, output_dir, suffix="", task="", stage="", 
     :param task: str, Task name for filename (default: "")
     :param stage: str, Processing stage for filename (default: "", options: "reference", "ica", "epochs")
     :param ylim: tuple or list, Y-axis limits [ymin, ymax] (default: None, auto-scale)
+    :return: None
     """
     fig, ax = plt.subplots(figsize=tuple(viz_params.get('figsize_qc', [10, 6])))
     
@@ -112,6 +117,7 @@ def plot_grand_average_psd(psd_data, qc_overall_dir, validation_root):
     :param psd_data: dict, {subject: {task: {'psd': psd_obj, 'raw': raw_obj}}}
     :param qc_overall_dir: str, Quality control overall directory
     :param validation_root: str, Validation root directory
+    :return: None
     """
     eo_psds = []
     ec_psds = []

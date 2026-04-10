@@ -7,7 +7,6 @@ Mail: pyry.hirvonen@tuni.fi
 """
 
 #import necessary tools from mne and mne_bids.
-import mne
 from mne_bids import BIDSPath, read_raw_bids
 #Path to the BIDS dataset root on local computer
 def load_raw(subject, session, task, datatype, bids_root):
@@ -32,7 +31,7 @@ def load_raw(subject, session, task, datatype, bids_root):
         root=bids_root
     )
     # Load the EEG data to "raw"
-    raw = read_raw_bids(bids_path,verbose=False)
+    raw = read_raw_bids(bids_path,verbose=True)
 
     # Load data into memory
     raw.load_data()

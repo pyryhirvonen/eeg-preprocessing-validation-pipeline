@@ -135,7 +135,6 @@ def detect_bad_channels(raw_clean, params):
     :return: set, Bad channel names
     """
     from pyprep import NoisyChannels
-    import numpy as np
 
     raw_clean.set_channel_types({
     "VPVA": "eog",

@@ -24,8 +24,6 @@ import json
 import os
 import shutil
 import matplotlib.pyplot as plt
-
-import mne
 from load_data import load_raw
 from preprocess import preprocess_raw
 from plot_psd import plot_subject_psd_qc, plot_grand_average_psd, compute_psd_own

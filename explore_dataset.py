@@ -1,78 +1,110 @@
 """
-script to help understand the data structure
-EEG - Data pipeline
+Dataset exploration module of EEG - Data pipeline:
 Bachelor's thesis
 Author: Pyry Hirvonen
 Student number: 152165990
 Mail: pyry.hirvonen@tuni.fi
 """
+
 from pathlib import Path
-
-import mne
+import json
 from load_data import load_raw
-import matplotlib.pyplot as plt
-# path of the data
-bids_root = Path("/Users/pyryhirvonen/Desktop/Opiskelu/2025-2026/Kandidaatin tutkinto/Discover EEG - Pyry/TD-BRAIN-SAMPLE")
-
-#list the subject folder names from TD-BRAIN-SAMPLE folder and pick one of them
-subjects = [d.name for d in bids_root.iterdir()
-            if d.is_dir() and d.name.startswith("sub-")]
-print("Subjects of TD-BRAIN-SAMPLE:", subjects)
-subject= subjects[8]
-subject_path = bids_root / subject
-
-#list the session folder names from the subject folder and pick one of them
-sessions = [d.name for d in subject_path.iterdir()
-            if d.is_dir() and d.name.startswith("ses")]
-flipped_sessions=sessions[::-1]
-print("sessions of",subject ,flipped_sessions)
-session=flipped_sessions[2]
-session_path = subject_path / session / "eeg"
-
-#list tasks and choose one
-tasks = set()
-for f in session_path.iterdir():
-    if "_task-" in f.name:
-        task = f.name.split("_task-")[1].split("_")[0]
-        tasks.add(task)
-tasks = list(tasks)
-print("Tasks of ",session, tasks)
-task=tasks[1]
-task_path=session_path/task
-
-datatype="eeg"
-#use the "load_raw" function from load_data.py file
-raw=load_raw(subject.split("-")[1],session.split("-")[1],task,datatype,bids_root)
-
-#print the sampling rate and number of channels
-print("Sampling rate of signal:",raw.info["sfreq"])
-print("number of channels:",raw.info["nchan"])
-
-print(f"Channel names: {raw.ch_names}")
 
 
-montage = mne.channels.make_standard_montage("standard_1020")
-#montage.plot(show=True)
-#plt.tight_layout()
-#plt.show()
-raw.set_channel_types({
-    "VPVA": "misc",
-    "VNVB": "misc",
-    "HPHL": "eog",
-    "HNHR": "eog",
-    "OrbOcc": "eog",
-    "Erbs": "emg",
-    "Mass": "emg",
-})
-montage = mne.channels.make_standard_montage("standard_1020")
-raw.set_montage(montage, match_case=False,match_alias=False,on_missing='raise')
-from pyprep import NoisyChannels
-nd = NoisyChannels(
-    raw,
-    do_detrend=False,
-    random_state=42,)
-nd.find_bad_by_ransac()
-print(f"\n✓ RANSAC analysis complete")
-print(f"Bad channels detected: {nd.bad_by_ransac}")
-print(f"Number of bad channels: {len(nd.bad_by_ransac)}")
+def _extract_tasks(session_eeg_path: Path):
+    """
+    Return sorted unique task names from BIDS EEG filenames.
+
+    :param session_eeg_path: pathlib.Path, Path to session's eeg/ directory
+    :return: list[str], Sorted unique BIDS task names
+    """
+    tasks = set()
+    for f in session_eeg_path.glob("*_task-*_eeg.*"):
+        if "_task-" in f.name:
+            task = f.name.split("_task-")[1].split("_")[0]
+            tasks.add(task)
+    return sorted(tasks)
+
+
+def main():
+    """
+    Explore BIDS dataset contents and run a deterministic raw-data load check.
+
+    Reads pipeline configuration from params.json, lists available
+    subject/session/task combinations, and loads the first available
+    recording to print basic metadata.
+
+    :return: None
+    """
+    with open("params.json", "r", encoding="utf-8") as f:
+        params = json.load(f)
+
+    bids_root = Path(params.get("bids_root", ""))
+    if not bids_root.exists():
+        raise FileNotFoundError(
+            f"BIDS root not found: {bids_root}. Update bids_root in params.json."
+        )
+
+    subjects = sorted(
+        d.name for d in bids_root.iterdir() if d.is_dir() and d.name.startswith("sub-")
+    )
+    print(f"BIDS root: {bids_root}")
+    print(f"Found {len(subjects)} subject(s)")
+
+    if not subjects:
+        print("No subjects found. Check dataset contents.")
+        return
+
+    # Explore all subject/session/task combinations quickly
+    for subject in subjects:
+        subject_path = bids_root / subject
+        sessions = sorted(
+            d.name for d in subject_path.iterdir() if d.is_dir() and d.name.startswith("ses-")
+        )
+        print(f"\n{subject}: sessions={sessions}")
+
+        for session in sessions:
+            eeg_path = subject_path / session / "eeg"
+            if not eeg_path.exists():
+                continue
+            tasks = _extract_tasks(eeg_path)
+            print(f"  {session}: tasks={tasks}")
+
+    # Deterministic load test: first subject, first session, first task
+    first_subject = subjects[0]
+    first_subject_path = bids_root / first_subject
+    first_sessions = sorted(
+        d.name
+        for d in first_subject_path.iterdir()
+        if d.is_dir() and d.name.startswith("ses-")
+    )
+
+    if not first_sessions:
+        print("No sessions found for first subject. Skipping load test.")
+        return
+
+    first_session = first_sessions[0]
+    first_eeg = first_subject_path / first_session / "eeg"
+    first_tasks = _extract_tasks(first_eeg)
+
+    if not first_tasks:
+        print("No tasks found for first subject/session. Skipping load test.")
+        return
+
+    first_task = first_tasks[0]
+    raw = load_raw(
+        subject=first_subject.split("-")[1],
+        session=first_session.split("-")[1],
+        task=first_task,
+        datatype=params.get("datatype", "eeg"),
+        bids_root=bids_root,
+    )
+
+    print("\nMetadata:")
+    print(f"  sampling rate={raw.info['sfreq']} Hz")
+    print(f"  channels={raw.info['nchan']}")
+
+
+if __name__ == "__main__":
+    main()
 
