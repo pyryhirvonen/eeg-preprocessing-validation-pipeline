@@ -10,7 +10,7 @@ A DISCOVER-EEG–inspired automated EEG processing pipeline implemented in Pytho
 
 ## Overview
 
-This pipeline processes resting-state EEG data from the [TD-BRAIN](https://www.nature.com/articles/s41597-022-01409-z) sample dataset in a fully automated, reproducible, BIDS-compliant manner. The primary validation target is reproducing the well-known **eyes-open (EO) vs. eyes-closed (EC) alpha-band attenuation** (8–12 Hz), following the methodology of the [DISCOVER-EEG](https://www.nature.com/articles/s41597-023-02525-0) pipeline.
+This pipeline processes resting-state EEG data from the [TD-BRAIN](https://www.nature.com/articles/s41597-022-01409-z) sample dataset in a fully automated, reproducible, BIDS-compliant manner. The primary validation target is reproducing the well-known **eyes-open (EO) vs. eyes-closed (EC) alpha-band attenuation** (8–13 Hz), following the methodology of the [DISCOVER-EEG](https://www.nature.com/articles/s41597-023-02525-0) pipeline.
 
 
 
@@ -26,8 +26,8 @@ Key packages: `mne`, `mne-bids`, `mne-icalabel`, `pyprep`, `numpy`, `scipy`, `ma
 ## Installation
 
 ```bash
-git clone https://github.com/pyryhirvonen/Bachelors-thesis---eeg-pipeline.git
-cd Bachelors-thesis---eeg-pipeline
+git clone https://github.com/pyryhirvonen/eeg-preprocessing-validation-pipeline.git
+cd eeg-preprocessing-validation-pipeline
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
