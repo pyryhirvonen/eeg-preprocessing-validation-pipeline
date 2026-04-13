@@ -54,6 +54,10 @@ qc_results = []  # Store QC metrics for CSV summary
 # Create error log file
 error_log_path = "derivatives/quality_control/error_log.txt"
 
+# Recreate error log on each run (clear previous run entries)
+with open(error_log_path, "w") as log:
+    log.write("")
+
 # Iterate and run pipeline per subject/session/task
 for subject in subjects:
     psd_data[subject] = {}

@@ -154,7 +154,7 @@ def detect_bad_channels(raw_clean, params):
     nd = NoisyChannels(
         raw_clean,
         do_detrend=False,
-        random_state=params.get('discover_random_state', 42),
+        random_state=params.get('seed', 42),
         matlab_strict=False,
         ransac=False
     )

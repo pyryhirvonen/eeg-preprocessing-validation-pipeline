@@ -44,7 +44,7 @@ def run_ica(raw_clean, params, subject="", task="", output_dir=""):
     ica_params = params.get("ica", {})
 
     # Extract parameters
-    random_state = ica_params.get("random_state", 42)
+    seed = ica_params.get("seed", 42)
     n_repetitions = ica_params.get("n_repetitions", 10)
     artifact_threshold = ica_params.get("artifact_threshold", 0.8)
 
@@ -67,7 +67,7 @@ def run_ica(raw_clean, params, subject="", task="", output_dir=""):
         raw_copy = raw_clean.copy()
 
         # Step 4: Fit ICA
-        ica = fit_ica(raw_copy, params, random_state=random_state + run_idx)
+        ica = fit_ica(raw_copy, params, seed=seed + run_idx)
 
         # Step 4: Classify with ICLabel & identify artifacts
         artifact_info = identify_artifact_components(
@@ -138,14 +138,14 @@ def run_ica(raw_clean, params, subject="", task="", output_dir=""):
     return best['raw_cleaned'], best_artifact_info
 
 
-def fit_ica(raw, params, random_state):
+def fit_ica(raw, params, seed):
     """
     Fits ICA on raw data. Uses infomax (= MATLAB runica) by default with extended infomax.
     ICA is fitted only on clean channels (bad channels already removed).
 
     :param raw: mne.io.Raw, Raw EEG data
     :param params: dict, Full params.json config
-    :param random_state: int, Random state for reproducibility
+    :param seed: int, Seed for reproducibility
     :return: mne.preprocessing.ICA, Fitted ICA object
     """
     ica_params = params.get("ica", {})
@@ -155,7 +155,7 @@ def fit_ica(raw, params, random_state):
 
     ica = ICA(
         n_components=n_components,
-        random_state=random_state,
+        random_state=seed,
         method=method,
         fit_params=fit_params
     )

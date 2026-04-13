@@ -28,7 +28,7 @@ This pipeline processes resting-state EEG data from the [TD-BRAIN](https://www.n
 
 **Validation:**
 11. **PSD computation** — multitaper power spectral density (1–100 Hz) from epochs
-12. **Cluster-based permutation test** — statistical comparison of EO vs EC across frequency spectrum
+12. **Cluster-based permutation test** — statistical comparison of EC vs EO across frequency spectrum
 ---
 
 ## Repository structure
@@ -37,20 +37,32 @@ This pipeline processes resting-state EEG data from the [TD-BRAIN](https://www.n
 ├── main.py                    # Entry point — runs the full pipeline
 ├── params.json                # Centralized configuration (all parameters)
 ├── load_data.py               # BIDS data loading via mne-bids
-├── preprocess.py              # Filtering, referencing, bad-channel detection, ICA orchestration
-├── ica.py                     # ICA decomposition and artifact component identification
+├── preprocess.py              # Filtering, referencing, bad-channel detection
+├── ica.py                     # ICA decomposition and artifact component identification, bad time segment detection and bad channel interpolation
 ├── epoch.py                   # Fixed-length epoch creation
-├── plot_psd.py                # PSD computation and visualization (log & linear scales)
-├── permutation_test.py        # Cluster-based permutation test (EO vs. EC validation)
-├── qc.py                      # QC report generation (combined QC figures and metrics)
+├── plot_psd.py                # PSD computation and visualization
+├── permutation_test.py        # Cluster-based permutation test
+├── qc.py                      # QC report generation 
 ├── explore_dataset.py         # Dataset structure exploration utility
 ├── requirements.txt           # Pinned Python dependencies
-└── derivatives/               # Pipeline outputs
-    ├── quality_control/       # Per-subject QC figures and metrics
-    │   ├── overall/combined/  # Combined QC plots for all subjects
-    │   └── sub-*/             # Per-subject subdirectories (raw, final stages)
-    ├── validation/            # Permutation test results (CSV) and figures
-    └── quality_control_final/ # Final consolidated outputs
+└── derivatives/               # Pipeline outputs (generated)
+    ├── quality_control/
+    │   ├── error_log.txt                    # Processing errors logged during pipeline run
+    │   ├── overall/
+    │   │   ├── combined/                    # Aggregated QC plots across all subjects
+    │   │   │   └── sub-*_task-*_qc_combined.png
+    │   │   ├── qc_summary.csv               # Per-subject metrics
+    │   │   └── grand_average_psd_eo_vs_ec.png
+    │   └── sub-{SUBJECT_ID}/
+    │       ├── raw/                         # Raw data plots and PSD
+    │       ├── reref/                       # After re-referencing (intermediate)
+    │       ├── ica/                         # After ICA artifact removal (intermediate)
+    │       ├── epoch/                       # After epoching (intermediate)
+    │       └── final/                       # Final cleaned data and QC
+    └── validation/
+        ├── permutation_results.csv          # EC vs EO cluster-based permutation test
+        ├── permutation_test_clusters.png    # Significant frequency clusters visualization
+        └── grand_average_psd_eo_vs_ec.png  # Grand-average PSD with statistical highlighting
 ```
 
 ---
@@ -119,12 +131,36 @@ python explore_dataset.py
 ### Output organization
 
 Outputs are written to `derivatives/`:
-- **`quality_control/`** — Per-subject QC figures organized by stage (raw → final)
-  - `overall/combined/` — aggregated QC plots
-  - `overall/qc_summary.csv` — per-subject metrics (channels flagged, ICs removed, epochs per condition)
-- **`validation/`** — Statistical validation results
-  - `permutation_results.csv` — EO vs EC cluster-based permutation test output
-  - Grand-average PSD figure with log scale
+
+```
+derivatives/
+├── quality_control/
+│   ├── error_log.txt                    # Processing errors logged during pipeline run
+│   ├── overall/
+│   │   ├── combined/                    # Aggregated QC plots across all subjects
+│   │   │   └── sub-*_task-*_qc_combined.png
+│   │   ├── qc_summary.csv               # Per-subject metrics (channels flagged, ICs removed, epochs per condition)
+│   │   └── grand_average_psd_eo_vs_ec.png  # Grand-average PSD (EO vs EC comparison, log scale)
+│   └── sub-{SUBJECT_ID}/
+│       ├── raw/                         # Raw data plots and PSD (before preprocessing)
+│       │   ├── sub-{ID}_ses-{SESSION}_task-{TASK}_raw.png
+│       │   └── sub-{ID}_task-{TASK}_psd_qc_raw.png
+│       ├── reref/                       # After re-referencing step (intermediate)
+│       ├── ica/                         # After ICA artifact removal (intermediate)
+│       ├── epoch/                       # After epoching (intermediate)
+│       └── final/                       # Final cleaned data and QC summary
+│           ├── sub-{ID}_ses-{SESSION}_task-{TASK}_cleaned.png
+│           └── sub-{ID}_task-{TASK}_qc_combined.png
+└── validation/
+    ├── permutation_results.csv              # EC vs EO cluster-based permutation test output
+    ├── permutation_test_clusters.png        # Visualization of significant frequency clusters
+    └── grand_average_psd_eo_vs_ec.png      # Grand-average PSD with statistical highlighting
+```
+
+**Key outputs:**
+- **`qc_summary.csv`** — Metrics per subject: bad channels detected, ICA components removed, clean epochs kept (EO vs EC)
+- **`qc_combined.png`** — Per-subject comprehensive QC visualization combining time-series, PSD, ICA components, and channel/artifact information
+- **`permutation_results.csv`** — Statistical test output (significant frequency clusters where EO ≠ EC)
 
 ---
 
@@ -140,10 +176,11 @@ Dataset reference: van Dijk *et al.* (2022). *Scientific Data*, 9, 333. https://
 ### Key design decisions
 
 1. **Configuration-driven**: All parameters live in `params.json` to ensure reproducibility and easy parameter sweeps.
-2. **Per-subject organization**: Output directories follow `derivatives/quality_control/sub-{SUBJECT_ID}/` for clean organization.
+2. **Per-subject organization**: Output directories follow `derivatives/quality_control/sub-{SUBJECT_ID}/` with substages (raw → reref → ica → epoch → final) for transparent pipeline tracking.
 3. **ICA multi-run strategy** (optional): Set `n_repetitions > 1` in `params.json` to run ICA multiple times and select the most stable decomposition (following DISCOVER-EEG). By default `n_repetitions = 10`.
-4. **Integrated QC**: The `qc.py` module generates comprehensive per-subject figures combining channel detection, IC classification, and PSD comparison in a single plot (`qc_combined.png`).
-5. **Statistical validation**: The permutation cluster test compares EO vs EC PSD across the full frequency range (1–100 Hz) and identifies significant frequency clusters where alpha attenuation occurs.
+4. **Integrated QC**: The `qc.py` module generates comprehensive per-subject figures combining channel detection, IC classification, and PSD comparison in a single `qc_combined.png` plot.
+5. **Intermediate stage outputs**: Raw, reref, ica, and epoch subdirectories allow visual inspection of each processing step for troubleshooting and validation.
+6. **Statistical validation**: The permutation cluster test compares EC vs EO PSD across the full frequency range (1–100 Hz) and identifies significant frequency clusters where alpha attenuation occurs.
 
 ### DISCOVER-EEG alignment
 
@@ -152,7 +189,7 @@ This pipeline closely follows the DISCOVER-EEG methodology:
 - **ICA**: Extended Infomax with artifact component labeling via `mne-icalabel`
 - **Epoching**: 2 s fixed-length windows with 50% overlap for robust spectral estimation
 - **PSD**: Multitaper method (1–100 Hz) for stable power estimates
-- **Validation**: Cluster-based permutation test for EO vs EC comparison
+- **Validation**: Cluster-based permutation test for EC vs EO comparison
 
 ### Error handling
 

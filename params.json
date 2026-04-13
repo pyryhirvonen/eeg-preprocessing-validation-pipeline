@@ -44,7 +44,7 @@
     "bad_channel_flat": 1e-06,
     "bad_channel_min_duration": 5,
     "bad_channel_bad_percent": 20,
-    "discover_random_state": 42
+    "seed": 42
   },
   "ica": {
     "method": "infomax",
@@ -52,7 +52,7 @@
       "extended": true
     },
     "n_components": null,
-    "random_state": 42,
+    "seed": 42,
     "n_repetitions": 10,
     "artifact_threshold": 0.8,
     "bad_segment_peak": 200e-06,
