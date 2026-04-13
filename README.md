@@ -10,7 +10,7 @@ A DISCOVER-EEG–inspired automated EEG processing pipeline implemented in Pytho
 
 ## Overview
 
-This pipeline processes resting-state EEG data from the [TD-BRAIN](https://www.nature.com/articles/s41597-022-01413-4) sample dataset in a fully automated, reproducible, BIDS-compliant manner. The primary validation target is reproducing the well-known **eyes-open (EO) vs. eyes-closed (EC) alpha-band attenuation** (8–12 Hz), following the methodology of the [DISCOVER-EEG](https://www.nature.com/articles/s41597-023-02525-0) pipeline.
+This pipeline processes resting-state EEG data from the [TD-BRAIN](https://www.nature.com/articles/s41597-022-01409-z) sample dataset in a fully automated, reproducible, BIDS-compliant manner. The primary validation target is reproducing the well-known **eyes-open (EO) vs. eyes-closed (EC) alpha-band attenuation** (8–12 Hz), following the methodology of the [DISCOVER-EEG](https://www.nature.com/articles/s41597-023-02525-0) pipeline.
 
 
 
@@ -73,7 +73,7 @@ python explore_dataset.py
 ## Data
 
 This pipeline is designed for the **TD-BRAIN sample dataset**, a BIDS-compliant resting-state EEG dataset (20 subjects, 2 conditions: `restEC`, `restEO`).  
-Dataset reference: van Dijk *et al.* (2022). *Scientific Data*, 9, 333. https://doi.org/10.1038/s41597-022-01413-4
+Dataset reference: van Dijk, H., van Wingen, G., Denys, D. *et al.* (2022). *The two decades brainclinics research archive for insights in neurophysiology (TDBRAIN) database*. *Scientific Data*, 9, 333. https://doi.org/10.1038/s41597-022-01409-z
 
 ---
 ### Pipeline steps
