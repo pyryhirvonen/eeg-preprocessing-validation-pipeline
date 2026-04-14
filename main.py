@@ -39,6 +39,7 @@ subjects = params.get("subjects", [])
 sessions = params.get("sessions", [])
 tasks = params.get("tasks", [])
 datatype = params.get("datatype")
+channel_setup_params = params.get("channel_setup", {})
 
 # Create output directories with new hierarchical structure
 qc_root = "derivatives/quality_control"
@@ -80,7 +81,14 @@ for subject in subjects:
                 print(f"{'='*60}")
                 
                 # Load raw data
-                raw = load_raw(subject, session, task, datatype, bids_root)
+                raw = load_raw(
+                    subject,
+                    session,
+                    task,
+                    datatype,
+                    bids_root,
+                    channel_setup_params=channel_setup_params,
+                )
                 print(raw.info)
                 
                 # Plot raw data

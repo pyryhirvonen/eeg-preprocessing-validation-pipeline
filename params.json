@@ -30,6 +30,19 @@
     "restEO"
   ],
   "datatype": "eeg",
+  "channel_setup": {
+    "montage_name": "standard_1020",
+    "channel_type_overrides": {
+      "VPVA": "eog",
+      "VNVB": "eog",
+      "HPHL": "eog",
+      "HNHR": "eog",
+      "OrbOcc": "eog",
+      "Erbs": "ecg",
+      "Mass": "emg"
+    },
+    "set_eeg_not_in_montage_to_misc": true
+  },
   "preprocessing": {
     "notch_freq": 50,
     "hp_cutoff": 1,
@@ -37,6 +50,7 @@
     "do_bandpass": true,
     "do_notch": true,
     "do_ref": true,
+    "ref_channels": "average",
     "do_bads_detection": true,
     "do_run_ica": true,
     "do_epoching": true,

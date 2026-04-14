@@ -28,6 +28,7 @@ def preprocess_raw(raw, params, subject="", task="", output_dir=""):
     :return: tuple (mne.io.Raw, mne.Epochs, dict artifact_info)
     """
     pp = params.get("preprocessing", {})
+    channel_setup = params.get("channel_setup", {})
     
     # Extract all parameters from params
     notch_freq = pp.get("notch_freq", 50)
@@ -36,6 +37,7 @@ def preprocess_raw(raw, params, subject="", task="", output_dir=""):
     do_bandpass = pp.get("do_bandpass", True)
     do_notch = pp.get("do_notch", True)
     do_ref = pp.get("do_ref", True)
+    ref_channels = pp.get("ref_channels", "average")
     do_bads_detection = pp.get("do_bads_detection", True)
     do_run_ica = pp.get("do_run_ica", True)
     do_epoching = pp.get("do_epoching", True)
@@ -64,11 +66,12 @@ def preprocess_raw(raw, params, subject="", task="", output_dir=""):
     # Step 2: Bad channel detection (before re-referencing, so bad channels
     # don't contaminate the average reference — matches PREP & DISCOVER-EEG)
     if do_bads_detection:
-        raw_clean = detect_bad_channels(raw_clean, pp)
+        montage_name = channel_setup.get("montage_name", pp.get("montage_name", "standard_1020"))
+        raw_clean = detect_bad_channels(raw_clean, pp, montage_name=montage_name)
     
     # Step 3: Average reference (after bad channel detection)
     if do_ref:
-        raw_clean = average_reference(raw_clean)
+        raw_clean = average_reference(raw_clean, ref_channels=ref_channels)
     
     # Plot PSD after rereferencing (stage: reference)
     if subject and task and reref_dir:
@@ -110,20 +113,21 @@ def notch_filter(raw,freqs):
     """
     return raw.notch_filter(freqs)
 
-def average_reference(raw):
+def average_reference(raw, ref_channels="average"):
     """
     function takes raw from preprocess_raw, returns object raw with new
-    average reference.
+    reference. 
     :param raw: obj, EEG-data and metadata that we are processing
-    :return: object raw with new average reference.
+    :param ref_channels: str | list, reference channel setting for MNE (default: "average", can also be list of channel names for specific reference)
+    :return: object raw with new reference.
     """
-    return raw.set_eeg_reference(ref_channels="average")
+    return raw.set_eeg_reference(ref_channels=ref_channels)
 
 
 
 
 
-def detect_bad_channels(raw_clean, params):
+def detect_bad_channels(raw_clean, params, montage_name="standard_1020"):
     """
     Detects bad channels using multiple criteria:
     1. Flatness (signal variability)
@@ -136,17 +140,13 @@ def detect_bad_channels(raw_clean, params):
     """
     from pyprep import NoisyChannels
 
-    raw_clean.set_channel_types({
-    "VPVA": "eog",
-    "VNVB": "eog",
-    "HPHL": "eog",
-    "HNHR": "eog",
-    "OrbOcc": "eog",
-    "Erbs": "ecg",
-    "Mass": "emg",
-})
-    montage = mne.channels.make_standard_montage("standard_1020")
-    raw_clean.set_montage(montage, match_case=False,match_alias=False,on_missing='raise')
+    montage = mne.channels.make_standard_montage(montage_name)
+    raw_clean.set_montage(
+        montage,
+        match_case=False,
+        match_alias=False,
+        on_missing="ignore",
+    )
     
     all_bads = set()  # Use a set to avoid duplicates
     
