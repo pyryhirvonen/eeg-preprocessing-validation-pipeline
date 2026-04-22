@@ -1,5 +1,5 @@
 {
-  "bids_root": "/Users/pyryhirvonen/Desktop/Opiskelu/2025-2026/Kandidaatin tutkinto/Discover EEG - Pyry/TD-BRAIN-SAMPLE",
+  "bids_root": "./TD-BRAIN-SAMPLE",
   "subjects": [
     "19684666",
     "19731853",
@@ -54,17 +54,12 @@
     "do_bads_detection": true,
     "do_run_ica": true,
     "do_epoching": true,
-    "bad_channel_peak": 0.0002,
     "bad_channel_flat": 1e-06,
-    "bad_channel_min_duration": 5,
-    "bad_channel_bad_percent": 20,
     "seed": 42
   },
   "ica": {
     "method": "infomax",
-    "fit_params": {
-      "extended": true
-    },
+    "extended": true,
     "n_components": null,
     "seed": 42,
     "n_repetitions": 10,

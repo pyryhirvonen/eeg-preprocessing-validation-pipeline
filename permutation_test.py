@@ -1,9 +1,6 @@
 """
 Permutation test module of EEG - Data pipeline.
 Bachelor's thesis
-Author: Pyry Hirvonen
-Student number: 152165990
-Mail: pyry.hirvonen@tuni.fi
 """
 
 import os
@@ -20,7 +17,7 @@ def run_permutation_cluster_test(psd_data, params, validation_root, qc_root):
     
     Workflow:
     1. Extract PSD power values and interpolate to common frequency grid
-    2. Compute paired t-statistics (EO - EC) across subjects
+    2. Compute paired t-statistics (EC - EO) across subjects
     3. Run cluster-based permutation test with MNE
     4. Format and save results CSV
     5. Generate validation figure with significant clusters highlighted
@@ -43,8 +40,8 @@ def run_permutation_cluster_test(psd_data, params, validation_root, qc_root):
     freq_min = perm_params.get("freq_min", 1)
     freq_max = perm_params.get("freq_max", 100)
     n_freqs = perm_params.get("n_freqs", 500)
-    n_permutations = perm_params.get("n_permutations", 1000)
-    seed = perm_params.get("seed", None)
+    n_permutations = perm_params.get("n_permutations", 500)
+    seed = perm_params.get("seed", 42)
     alpha = perm_params.get("alpha", 0.05)  # Significance level for threshold calculation
     
     # Create common frequency grid
@@ -167,8 +164,8 @@ def run_cluster_permutation(eo_power, ec_power, common_freqs,
     :param seed: Random seed
     :return: T_obs, clusters, cluster_p_values, H0
     """
-    # Compute paired differences (EO - EC for each subject across frequencies)
-    differences = eo_power - ec_power  # shape: (n_subjects, n_freqs)
+    # Compute paired differences (EC - EO for each subject across frequencies)
+    differences = ec_power - eo_power  # shape: (n_subjects, n_freqs)
     
     # Build 1D frequency adjacency matrix
     adjacency = build_1d_adjacency(len(common_freqs))
@@ -222,12 +219,12 @@ def format_cluster_results(T_obs, clusters, cluster_p_values, common_freqs,
         # Get maximum t-statistic in cluster
         t_stat_max = np.max(np.abs(T_obs[cluster_indices]))
         
-        # Determine direction: EO > EC (positive t) or EC > EO (negative t)
+        # Determine direction: EC > EO (positive t) or EO > EC (negative t)
         mean_t = T_obs[cluster_indices].mean()
         if mean_t > 0:
-            direction = "EO > EC"
-        else:
             direction = "EC > EO"
+        else:
+            direction = "EO > EC"
         
         # Compute mean power difference in cluster
         mean_diff = (eo_power[:, cluster_indices].mean() - ec_power[:, cluster_indices].mean()).mean()
@@ -298,12 +295,12 @@ def plot_psd_with_clusters(psd_data, clusters, cluster_p_values,
     if ec_grand_avg is not None:
         ax.semilogy(common_freqs, ec_grand_avg, label=f"Eyes Closed (n={len(ec_psds)})",
                    linewidth=viz_params.get("linewidth_grand", 1.5),
-                   color=viz_params.get("color_ec", "steelblue"))
+                   color=viz_params.get("color_ec", "blue"))
     
     if eo_grand_avg is not None:
         ax.semilogy(common_freqs, eo_grand_avg, label=f"Eyes Open (n={len(eo_psds)})",
                    linewidth=viz_params.get("linewidth_grand", 1.5),
-                   color=viz_params.get("color_eo", "lightgreen"))
+                   color=viz_params.get("color_eo", "green"))
     
     # Highlight alpha band
     ax.axvspan(viz_params.get("alpha_band_min", 8), viz_params.get("alpha_band_max", 13),
@@ -341,5 +338,5 @@ def plot_psd_with_clusters(psd_data, clusters, cluster_p_values,
     
     # Save figure
     fig_path = os.path.join(output_dir, "permutation_test_clusters.png")
-    fig.savefig(fig_path, dpi=viz_params.get("dpi", 100), bbox_inches="tight")
+    fig.savefig(fig_path, dpi=viz_params.get("dpi", 300), bbox_inches="tight")
     plt.close(fig)

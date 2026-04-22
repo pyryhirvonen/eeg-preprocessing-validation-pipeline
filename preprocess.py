@@ -1,9 +1,6 @@
 """
 Data preprocessing modules of EEG - Data pipeline:
 Bachelor's thesis
-Author: Pyry Hirvonen
-Student number: 152165990
-Mail: pyry.hirvonen@tuni.fi
 """
 
 import os
@@ -15,8 +12,8 @@ from plot_psd import compute_psd_own, plot_subject_psd_qc
 
 def preprocess_raw(raw, params, subject="", task="", output_dir=""):
     """
-    Orchestrates all preprocessing steps (DISCOVER-EEG pipeline).
-    Steps 1-3: Filtering, re-referencing, bad channel detection
+    Orchestrates all preprocessing steps.
+    Steps 1-3: Filtering, bad channel detection, re-referencing
     Steps 4-6: ICA + interpolation + bad segments (handled by run_ica)
     Step 7: Epoching
     
@@ -32,7 +29,7 @@ def preprocess_raw(raw, params, subject="", task="", output_dir=""):
     
     # Extract all parameters from params
     notch_freq = pp.get("notch_freq", 50)
-    hp_cutoff = pp.get("hp_cutoff", 0.5)
+    hp_cutoff = pp.get("hp_cutoff", 1)
     lp_cutoff = pp.get("lp_cutoff", 100)
     do_bandpass = pp.get("do_bandpass", True)
     do_notch = pp.get("do_notch", True)
@@ -56,20 +53,19 @@ def preprocess_raw(raw, params, subject="", task="", output_dir=""):
     
     raw_clean = raw.copy()
 
-    # Steps 1-3: Filtering and re-referencing
+    # Step 1: Filtering (notch + bandpass)
     if do_notch:
         raw_clean = notch_filter(raw_clean, notch_freq)
     
     if do_bandpass:
         raw_clean = bandpass_filter(raw_clean, hp_cutoff, lp_cutoff)
 
-    # Step 2: Bad channel detection (before re-referencing, so bad channels
-    # don't contaminate the average reference — matches PREP & DISCOVER-EEG)
+    # Step 2: Bad channel detection using multiple criteria (flatness, SNR, RANSAC)
     if do_bads_detection:
         montage_name = channel_setup.get("montage_name", pp.get("montage_name", "standard_1020"))
         raw_clean = detect_bad_channels(raw_clean, pp, montage_name=montage_name)
     
-    # Step 3: Average reference (after bad channel detection)
+    # Step 3: Re-reference using configured strategy
     if do_ref:
         raw_clean = average_reference(raw_clean, ref_channels=ref_channels)
     
@@ -129,14 +125,15 @@ def average_reference(raw, ref_channels="average"):
 
 def detect_bad_channels(raw_clean, params, montage_name="standard_1020"):
     """
-    Detects bad channels using multiple criteria:
+    Detects bad channels using multiple criteria via PyPrep's NoisyChannels:
     1. Flatness (signal variability)
     2. Noise-to-Signal ratio (SNR)
-    3. RANSAC predictability 
+    3. RANSAC predictability
     
     :param raw_clean: mne.io.Raw, Preprocessed EEG data
-    :param params: dict, Parameters from params.json
-    :return: set, Bad channel names
+    :param params: dict, Preprocessing parameters from params.json
+    :param montage_name: str, Electrode montage name (default: "standard_1020")
+    :return: mne.io.Raw with bad channels marked in raw.info['bads']
     """
     from pyprep import NoisyChannels
 

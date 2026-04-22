@@ -1,9 +1,6 @@
 """
 ICA module of EEG - Data pipeline:
 Bachelor's thesis
-Author: Pyry Hirvonen
-Student number: 152165990
-Mail: pyry.hirvonen@tuni.fi
 
 Implements DISCOVER-EEG steps 4-6 with repetition strategy:
   Step 4: ICA decomposition + ICLabel artifact classification
@@ -151,7 +148,8 @@ def fit_ica(raw, params, seed):
     ica_params = params.get("ica", {})
     n_components = ica_params.get("n_components", None)
     method = ica_params.get("method", "infomax")
-    fit_params = ica_params.get("fit_params", {"extended": True})
+    extended = ica_params.get("extended", True)
+    fit_params = {"extended": extended}
 
     ica = ICA(
         n_components=n_components,
@@ -222,7 +220,7 @@ def detect_bad_segments(raw, ica_params):
         raw,
         peak=ica_params.get('bad_segment_peak', 200e-6),
         flat=ica_params.get('bad_segment_flat', 1e-6),
-        min_duration=ica_params.get('bad_segment_min_duration', 0.125),
+        min_duration=ica_params.get('bad_segment_min_duration', 0.5),
         bad_percent=ica_params.get('bad_segment_bad_percent', 20),
     )
 

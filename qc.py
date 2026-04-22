@@ -1,9 +1,6 @@
 """
 Data preprocessing quality control module of EEG - Data pipeline:
 Bachelor's thesis
-Author: Pyry Hirvonen
-Student number: 152165990
-Mail: pyry.hirvonen@tuni.fi
 Generates QC summary CSV and visualization figures following DISCOVER-EEG guidelines.
 """
 

@@ -1,9 +1,6 @@
 """
 Main file of EEG - Data pipeline
 Bachelor's thesis
-Author: Pyry Hirvonen
-Student number: 152165990
-Mail: pyry.hirvonen@tuni.fi
 """
 
 """
@@ -11,11 +8,12 @@ Main orchestration file for EEG-data pipeline.
 
 This script:
 1. Loads raw EEG data from BIDS-compliant dataset
-2. Preprocesses data (notch filter, bandpass, average reference)
+2. Preprocesses data (notch filter, bandpass, bad channel detection, re-referencing)
 3. Runs ICA artifact removal (DISCOVER-EEG multi-run strategy)
 4. Creates fixed-length overlapping epochs
 5. Computes Power Spectral Density (PSD)
 6. Generates QC reports and visualizations
+7. Performs cluster-based permutation test for EC vs EO validation
 
 Configuration is centralized in params.json for reproducibility.
 """

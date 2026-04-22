@@ -3,14 +3,13 @@
 A DISCOVER-EEG–inspired automated EEG processing pipeline implemented in Python, developed as a bachelor's thesis at Tampere University.
 
 **Author:** Pyry Hirvonen  
-**Contact:** pyry.hirvonen@tuni.fi  
 **License:** MIT — see [LICENSE](LICENSE)
 
 ---
 
 ## Overview
 
-This pipeline processes resting-state EEG data from the [TD-BRAIN](https://www.nature.com/articles/s41597-022-01409-z) sample dataset in a fully automated, reproducible, BIDS-compliant manner. The primary validation target is reproducing the well-known **eyes-open (EO) vs. eyes-closed (EC) alpha-band attenuation** (8–13 Hz), following the methodology of the [DISCOVER-EEG](https://www.nature.com/articles/s41597-023-02525-0) pipeline.
+This pipeline processes resting-state EEG data from the [TD-BRAIN](https://www.nature.com/articles/s41597-022-01409-z) sample dataset in a fully automated, reproducible, BIDS-compliant manner. The primary validation target is reproducing the well-known **eyes-closed (EC) vs. eyes-open (EO) alpha-band attenuation** (8–13 Hz), following the methodology of the [DISCOVER-EEG](https://www.nature.com/articles/s41597-023-02525-0) pipeline.
 
 
 
@@ -83,11 +82,11 @@ Dataset reference: van Dijk, H., van Wingen, G., Denys, D. *et al.* (2022). *The
 2. **Line-noise removal** — notch filter (50 Hz) for power-line interference
 3. **Band-pass filter** — high-pass (1 Hz) and low-pass (100 Hz)
 4. **Bad channel detection** — automated detection using RANSAC (`pyprep`)
-5. **Re-reference** — average reference across all channels
+5. **Re-reference** — apply selected reference strategy (average by default)
 6. **ICA** — extended Infomax ICA decomposition with artifact labeling via `mne-icalabel`
 7. **Bad channel interpolation** — recover flagged channels using neighboring channels
 8. **Bad segment detection** — automated detection of artifactual time segments
-9. **Epoching** — create fixed-length overlapping windows (2 s, 50% overlap)
+9. **Epoching** — create fixed-length overlapping windows (2 s duration, 1 s overlap)
 10. **QC plots** — generate per-subject quality control visualizations
 
 #### Validation

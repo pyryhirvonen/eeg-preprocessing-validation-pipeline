@@ -1,9 +1,6 @@
 """
 Data loading module of EEG - Data pipeline:
 Bachelor's thesis
-Author: Pyry Hirvonen
-Student number: 152165990
-Mail: pyry.hirvonen@tuni.fi
 """
 
 import csv
